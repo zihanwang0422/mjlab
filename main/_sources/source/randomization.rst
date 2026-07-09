@@ -87,6 +87,10 @@ and ``dr.body_ipos`` are the same function).
      - ``geom_size``
      - Geom-specific size parameters (radius, half-lengths, etc.)
      - Automatically recomputes ``geom_rbound`` and ``geom_aabb``
+   * - ``dr.geom_matid``
+     - ``geom_matid``
+     - Which baked material the geom renders with
+     - Samples uniformly from ``asset_cfg.material_names``
 
 .. rubric:: Body fields
 
@@ -817,10 +821,11 @@ per-environment values.
    * - Category
      - Field(s)
      - Notes
-   * - Material / texture swapping
-     - ``geom_matid``, ``mat_texid``
-     - Integer IDs that need a swapping API, not continuous
-       sampling. Requires material-level entity indexing.
+   * - Texture-role swapping
+     - ``mat_texid``
+     - Not implemented for now because mujoco's viewer doesn't reread
+       ``mat_texid`` after context creation; use ``geom_matid`` with one baked
+       material per texture to randomize textures instead.
    * - Mesh
      - ``mesh_vert``, ``mesh_normal``, ``mesh_face``, etc.
      - Shape variation for manipulation objects. These fields
@@ -1328,7 +1333,8 @@ The native viewer syncs per-world model fields from the GPU to a local
 ``MjModel`` before each render. All of MuJoCo's built-in visualization
 toggles then work correctly against the randomized model:
 
-- Geom appearance (``geom_rgba``, ``geom_size``, ``geom_pos``, ``geom_quat``)
+- Geom appearance (``geom_rgba``, ``geom_size``, ``geom_pos``, ``geom_quat``,
+  ``geom_matid``)
 - Material appearance (``mat_rgba``, ``mat_emission``, ``mat_specular``,
   ``mat_shininess``, ``mat_texrepeat``)
 - Body and site poses (``body_pos``, ``body_quat``, ``body_ipos``,

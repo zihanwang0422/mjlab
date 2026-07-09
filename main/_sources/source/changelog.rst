@@ -11,12 +11,32 @@ Added
 - Added ``MeshCfg``, a spec editor that matches mesh assets by name and edits
   their asset-level attributes. The first attribute is ``maxhullvert``, which
   caps the collision convex hull's vertex count to lower narrowphase cost.
+- Added ``SimulationCfg.broadphase`` and ``SimulationCfg.broadphase_filter``
+  to configure MuJoCo Warp's broadphase collision algorithm and
+  bounding-volume filters.
 
 Changed
 ^^^^^^^
 
+- Enabled skybox rendering for camera sensors.
+- Command delay on fusable actuators (ideal PD, DC motor) now applies one shared
+  lag per environment across all fused actuators sharing a delay config, matching
+  the built-in actuator path, rather than an independent lag per actuator group
+  (:issue:`1035`).
+
 Fixed
 ^^^^^
+
+- Fixed ``mdp.bad_orientation`` returning NaN when float32 rounding in
+  ``quat_apply_inverse`` pushed the projected-gravity z-component slightly
+  outside ``[-1, 1]``, making ``torch.acos`` return NaN and silently
+  suppressing the termination for flipped robots. The argument is now clamped
+  to ``[-1, 1]``.
+- Fixed a crash when using command delay on ideal PD (or other custom)
+  actuators whenever ``num_envs`` differed from the number of delayed targets,
+  and fused ideal PD and DC motor actuators sharing a transmission and delay
+  config into a single gather, delay, control-law evaluation, and control
+  write, removing per-group host overhead (:issue:`1035`).
 
 Version 1.5.0 (June 28, 2026)
 -----------------------------
@@ -167,6 +187,8 @@ Added
   prefixed and scattered via ``geom_matid`` alongside the existing
   ``geom_dataid`` table. Variants without a material get ``matid = -1``.
   Contribution by @omarrayyann.
+- Added ``dr.geom_matid`` to randomize which baked material each geom uses
+  per environment, sampling uniformly from ``asset_cfg.material_names``.
 
 Changed
 ^^^^^^^
