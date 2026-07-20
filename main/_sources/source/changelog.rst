@@ -8,6 +8,67 @@ Upcoming version (not yet released)
 Added
 ^^^^^
 
+Changed
+^^^^^^^
+
+- The Viser reward bar panel's term cap is now configurable via
+  ``ViewerConfig.reward_bar_max_terms``, so environments with more than 20
+  reward terms can show them all. Defaults to 20, preserving previous behavior.
+  :issue:`1079`
+
+Fixed
+^^^^^
+
+- The Viser reward bar panel no longer *silently* drops reward terms beyond
+  ``max_terms``; it now emits a warning listing the hidden terms. Previously
+  environments with more than 20 reward terms had the overflow disappear from
+  the bar panel with no indication. :issue:`1079`
+- Fixed the ``terrain_levels_vel`` curriculum promoting every env from level 0
+  to level 1 on the initial reset, ignoring ``max_init_terrain_level=0``. Before
+  the first step the robot sits at its spawn pose rather than a walked-to
+  position, so the distance check was spurious; terrain levels are now frozen on
+  that first reset. :issue:`1094`
+- Fixed the velocity task's actor ``joint_pos`` observation not being biased by
+  the ``encoder_bias`` domain randomization, so the encoder bias only affected
+  actions and never the observed joint positions. The actor now observes biased
+  joint positions while the critic keeps the true (unbiased) values as
+  privileged information, matching the tracking task.
+  See `discussion #1065 <https://github.com/mujocolab/mjlab/discussions/1065>`_.
+- Hardened ``fit_terrain_normal`` against non-finite raycast hits. A single env
+  with a diverged state produced a NaN/Inf covariance that made
+  ``torch.linalg.eigh`` raise and abort the whole batch; such rows now fall back
+  to the up vector. This stops the hard crash so a diverged env can be reset
+  normally; it does not by itself make a diverged env's downstream reward finite.
+  :issue:`912`
+- Enabled ``obs_normalization`` on the Go1 velocity actor and critic to match
+  the other velocity tasks. Without it, extreme-but-finite observations on rough
+  terrain drove value/policy divergence that eventually surfaced as a
+  ``normal expects all elements of std >= 0.0`` crash. Note that Go1 velocity
+  checkpoints trained before this change carry no normalizer buffers and will no
+  longer load; retrain from scratch. :issue:`870` :issue:`1044` :issue:`1053`
+- Fixed ``ContactSensor`` air-time tracking accumulating float32 sim-clock
+  differences, whose quantization error grows with the clock magnitude and made
+  ``compute_first_contact`` / ``compute_first_air`` miss touchdowns on long runs.
+  The exact float64 substep ``dt`` is now accumulated instead. :issue:`1101`
+
+Version 1.5.2 (July 17, 2026)
+-----------------------------
+
+Fixed
+^^^^^
+
+- Fixed CUDA illegal memory accesses when domain randomization triggers
+  ``set_const`` with multiple environments. ``actuator_acc0`` is now expanded
+  per environment before MuJoCo Warp recomputes it.
+- Fixed ``MaterialCfg.reflectance`` being ignored when building the MuJoCo
+  spec. Contribution by @bd-pmorais.
+
+Version 1.5.1 (July 15, 2026)
+-----------------------------
+
+Added
+^^^^^
+
 - Added ``MeshCfg``, a spec editor that matches mesh assets by name and edits
   their asset-level attributes. The first attribute is ``maxhullvert``, which
   caps the collision convex hull's vertex count to lower narrowphase cost.
@@ -18,7 +79,10 @@ Added
 Changed
 ^^^^^^^
 
-- Enabled skybox rendering for camera sensors.
+- Enabled skybox rendering for camera sensors. Contribution by @bd-pmorais.
+- Bumped the minimum ``mujoco-warp`` to 3.10.0.2, which fixes ``qfrc_constraint``
+  being populated incorrectly across vectorized environments (:issue:`1086`).
+  Earlier 3.10.0.x releases are no longer supported.
 - Command delay on fusable actuators (ideal PD, DC motor) now applies one shared
   lag per environment across all fused actuators sharing a delay config, matching
   the built-in actuator path, rather than an independent lag per actuator group
@@ -27,6 +91,13 @@ Changed
 Fixed
 ^^^^^
 
+- Fixed ``TerrainGenerator`` overwriting custom geom names set by sub-terrain
+  functions with the default ``terrain_{i}`` name. Only unnamed geoms are now
+  auto-named.
+- Fixed ``TorchArray`` not expanding world-shared model fields to ``nworld``
+  with mujoco_warp 3.10.0.2, which allocates them as real size-1 arrays
+  instead of stride-0 broadcast views. Multi-env indexing of fields like
+  ``soft_joint_pos_limits`` raised ``IndexError`` during resets (:issue:`1093`).
 - Fixed ``mdp.bad_orientation`` returning NaN when float32 rounding in
   ``quat_apply_inverse`` pushed the projected-gravity z-component slightly
   outside ``[-1, 1]``, making ``torch.acos`` return NaN and silently
@@ -189,6 +260,7 @@ Added
   Contribution by @omarrayyann.
 - Added ``dr.geom_matid`` to randomize which baked material each geom uses
   per environment, sampling uniformly from ``asset_cfg.material_names``.
+  Contribution by @bd-pmorais.
 
 Changed
 ^^^^^^^
