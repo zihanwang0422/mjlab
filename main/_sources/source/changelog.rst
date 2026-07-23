@@ -11,6 +11,19 @@ Added
 Changed
 ^^^^^^^
 
+- Changed the default MuJoCo Warp render background to solid black
+  (``0, 0, 0, 1``), matching MuJoCo's native renderer. Contribution by
+  @bd-pmorais.
+
+Fixed
+^^^^^
+
+Version 1.5.3 (July 22, 2026)
+-----------------------------
+
+Changed
+^^^^^^^
+
 - The Viser reward bar panel's term cap is now configurable via
   ``ViewerConfig.reward_bar_max_terms``, so environments with more than 20
   reward terms can show them all. Defaults to 20, preserving previous behavior.
@@ -21,6 +34,12 @@ Fixed
 
 - Bumped ``pillow`` (12.3.0), ``onnx`` (1.22.0), and ``soupsieve`` (2.9.1) in the
   lockfile to pick up security fixes.
+- Fixed raycast sensor debug visualization and observations lagging one step
+  behind the sensed hits. ``sense()`` rebinds the hit tensors after the cache had
+  already been repopulated by a pre-sense reward read, so ``.data`` returned the
+  previous step's hits; the cache is now invalidated after ``postprocess_rays``.
+  With ``ray_alignment="yaw"`` this made debug rays appear tilted by the foot's
+  per-step motion instead of vertical. :issue:`998`
 - Restored ONNX uploads and W&B run metadata for velocity and manipulation
   training when using RSL-RL's current ``WandbLogWriter`` logger name.
 - The Viser reward bar panel no longer *silently* drops reward terms beyond
@@ -54,6 +73,9 @@ Fixed
   differences, whose quantization error grows with the clock magnitude and made
   ``compute_first_contact`` / ``compute_first_air`` miss touchdowns on long runs.
   The exact float64 substep ``dt`` is now accumulated instead. :issue:`1101`
+- Bumped ``mujoco-warp`` to 3.10.0.3, fixing a CUDA 700 illegal memory access in
+  ``smooth.crb`` triggered by startup mass domain randomization (via
+  ``set_const``) once ``num_envs >= 128`` on consumer Ada GPUs. :issue:`1108`
 
 Version 1.5.2 (July 17, 2026)
 -----------------------------
