@@ -219,6 +219,30 @@ and ``dr.body_ipos`` are the same function).
      - ``light_dir``
      - Light direction vector
      -
+   * - ``dr.light_diffuse``
+     - ``light_diffuse``
+     - Diffuse RGB color
+     -
+   * - ``dr.light_specular``
+     - ``light_specular``
+     - Specular RGB color
+     -
+   * - ``dr.light_ambient``
+     - ``light_ambient``
+     - Ambient RGB color
+     -
+   * - ``dr.light_attenuation``
+     - ``light_attenuation``
+     - Constant, linear, and quadratic attenuation coefficients
+     -
+   * - ``dr.light_cutoff``
+     - ``light_cutoff``
+     - Spot light half-cone angle in degrees
+     - Ignored for directional lights
+   * - ``dr.light_exponent``
+     - ``light_exponent``
+     - Spot light angular falloff exponent
+     - Ignored for directional lights
 
 .. rubric:: Material fields
 
@@ -1344,7 +1368,9 @@ toggles then work correctly against the randomized model:
   to toggle inertia boxes
 - Camera parameters (``cam_pos``, ``cam_quat``, ``cam_fovy``,
   ``cam_intrinsic``): press ``Q`` to toggle camera frustums
-- Lights (``light_pos``, ``light_dir``)
+- Lights (``light_pos``, ``light_dir``, ``light_diffuse``, ``light_specular``,
+  ``light_ambient``, ``light_attenuation``, ``light_cutoff``,
+  ``light_exponent``)
 
 .. grid:: 2
 
